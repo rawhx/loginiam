@@ -28,6 +28,33 @@ API sederhana untuk login SSO UB (Brone/IAM UB) berbasis Go. Mendukung login awa
 | `BATCH_BURST` | `5` | Burst untuk `/batch`. |
 | `BATCH_RATE_PER_SEC` | `0.05` | Rate per detik untuk `/batch`. |
 
+## Authentication (Basic Auth)
+
+Secara default `AUTH_ENABLED=false` (backward compatible). Jika diaktifkan, semua endpoint **kecuali `/health`** akan membutuhkan Basic Auth.
+
+Variabel env:
+| Var | Default | Deskripsi |
+|---|---|---|
+| `AUTH_ENABLED` | `false` | Aktifkan Basic Auth (`true`/`false`). |
+| `AUTH_USER` | - | Username (wajib jika enabled). |
+| `AUTH_PASS` | - | Password (wajib jika enabled). |
+| `AUTH_REALM` | `loginiam` | Realm untuk WWW-Authenticate. |
+
+Catatan keamanan:
+- `/health` **dibebaskan untuk localhost** (127.0.0.1/::1) agar Docker HEALTHCHECK tetap bisa berjalan tanpa kredensial.
+- Jika `AUTH_ENABLED=true` tapi `AUTH_USER`/`AUTH_PASS` kosong, server akan merespons `500 AUTH_NOT_CONFIGURED` saat ada request.
+- Endpoint sensitif (`/login`, `/otp/verify`, `/batch`, `/metrics`, `/livez`, `/readyz`) akan mendapat `401 UNAUTHORIZED` tanpa kredensial yang valid.
+
+Contoh penggunaan:
+```bash
+# Request dengan Basic Auth
+curl -u admin:password http://127.0.0.1:8080/metrics
+
+# Health tetap bisa diakses dari localhost (tanpa auth)
+curl http://127.0.0.1:8080/health
+```
+
+
 ## Request & Response
 
 ### POST `/login`

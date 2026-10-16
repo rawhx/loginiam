@@ -48,6 +48,7 @@ func main() {
 	mux.Handle("/batch", batchLimiter.middleware("/batch", http.HandlerFunc(handleBatch)))
 
 	var h http.Handler = mux
+	h = authMiddleware(h)
 	h = metricsMiddleware(h)
 	h = logMiddleware(h)
 

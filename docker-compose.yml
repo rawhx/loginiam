@@ -11,6 +11,11 @@ services:
     environment:
       ADDR: ":8080"
       VERBOSE: "false"
+      # Authentication (set AUTH_ENABLED=true dan ubah password di produksi)
+      AUTH_ENABLED: "true"
+      AUTH_USER: "admin"
+      AUTH_PASS: "change-this-strong-password"
+      AUTH_REALM: "loginiam"
     # Batas resource agar container tetap ringan & tidak membebani host.
     healthcheck:
       test: ["CMD", "/api", "healthcheck"]
