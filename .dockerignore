@@ -1,0 +1,9 @@
+.git
+.gitignore
+*.md
+.idea
+.vscode
+api
+cmd/api/api
+*.test
+*.out

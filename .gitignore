@@ -1,0 +1,18 @@
+# Binaries
+api
+/cmd/api/api
+
+# Logs
+*.log
+*.out
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+
+# Go test/build
+*.test
+tmp/
