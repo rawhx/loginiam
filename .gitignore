@@ -1,7 +1,3 @@
-# Binaries
-api
-/cmd/api/api
-
 # Logs
 *.log
 *.out
