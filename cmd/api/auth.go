@@ -3,17 +3,19 @@ package main
 import (
 	"crypto/subtle"
 	"encoding/base64"
-	"net"
 	"net/http"
 	"os"
 	"strings"
 )
 
 var (
-	authEnabled = strings.EqualFold(os.Getenv("AUTH_ENABLED"), "true")
-	authUser    = os.Getenv("AUTH_USER")
-	authPass    = os.Getenv("AUTH_PASS")
-	authRealm   = os.Getenv("AUTH_REALM")
+	// metricsAuthEnabled mengontrol proteksi Basic Auth khusus endpoint
+	// /metrics. Default aktif (privat). Set METRICS_AUTH_ENABLED=false untuk
+	// membukanya (mis. saat pengembangan lokal).
+	metricsAuthEnabled = !strings.EqualFold(os.Getenv("METRICS_AUTH_ENABLED"), "false")
+	authUser           = os.Getenv("AUTH_USER")
+	authPass           = os.Getenv("AUTH_PASS")
+	authRealm          = os.Getenv("AUTH_REALM")
 )
 
 func init() {
@@ -22,26 +24,18 @@ func init() {
 	}
 }
 
-func isLocalhost(r *http.Request) bool {
-	host, _, err := net.SplitHostPort(r.RemoteAddr)
-	if err != nil {
-		host = r.RemoteAddr
-	}
-	if host == "127.0.0.1" || host == "::1" {
-		return true
-	}
-	return false
-}
-
-// authMiddleware menerapkan Basic Auth jika AUTH_ENABLED=true.
-// Endpoint /health dibebaskan untuk request dari localhost (agar Docker
-// HEALTHCHECK tetap bisa berjalan tanpa kredensial).
-func authMiddleware(next http.Handler) http.Handler {
-	if !authEnabled {
+// metricsAuthMiddleware melindungi endpoint /metrics dengan Basic Auth.
+// Endpoint lain (/login, /otp/verify, /batch, /health, /livez, /readyz)
+// dibiarkan publik. Jika METRICS_AUTH_ENABLED=false, /metrics juga publik.
+//
+// Bila proteksi aktif tetapi AUTH_USER/AUTH_PASS kosong, server menolak
+// dengan 500 AUTH_NOT_CONFIGURED (fail-closed) sehingga /metrics tetap privat
+// tanpa diam-diam terbuka.
+func metricsAuthMiddleware(next http.Handler) http.Handler {
+	if !metricsAuthEnabled {
 		return next
 	}
 
-	// Validasi kredensial jika enabled
 	if authUser == "" || authPass == "" {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("WWW-Authenticate", `Basic realm="`+authRealm+`"`)
@@ -50,12 +44,6 @@ func authMiddleware(next http.Handler) http.Handler {
 	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Bypass /health untuk localhost
-		if r.URL.Path == "/health" && isLocalhost(r) {
-			next.ServeHTTP(w, r)
-			return
-		}
-
 		auth := r.Header.Get("Authorization")
 		if !strings.HasPrefix(auth, "Basic ") {
 			w.Header().Set("WWW-Authenticate", `Basic realm="`+authRealm+`"`)

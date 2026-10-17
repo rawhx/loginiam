@@ -38,7 +38,7 @@ func main() {
 	mux.HandleFunc("/health", handleHealth)
 	mux.HandleFunc("/livez", handleLivez)
 	mux.HandleFunc("/readyz", handleReadyz)
-	mux.HandleFunc("/metrics", promhttp.Handler().ServeHTTP)
+	mux.Handle("/metrics", metricsAuthMiddleware(promhttp.Handler()))
 	loginLimiter := newIPLimiter(envFloat("LOGIN_BURST", 30), envFloat("LOGIN_RATE_PER_SEC", 0.5))
 	otpLimiter := newIPLimiter(envFloat("OTP_BURST", 20), envFloat("OTP_RATE_PER_SEC", 0.33))
 	batchLimiter := newIPLimiter(envFloat("BATCH_BURST", 5), envFloat("BATCH_RATE_PER_SEC", 0.05))
@@ -48,7 +48,6 @@ func main() {
 	mux.Handle("/batch", batchLimiter.middleware("/batch", http.HandlerFunc(handleBatch)))
 
 	var h http.Handler = mux
-	h = authMiddleware(h)
 	h = metricsMiddleware(h)
 	h = logMiddleware(h)
 

@@ -28,29 +28,28 @@ API sederhana untuk login SSO UB (Brone/IAM UB) berbasis Go. Mendukung login awa
 | `BATCH_BURST` | `5` | Burst untuk `/batch`. |
 | `BATCH_RATE_PER_SEC` | `0.05` | Rate per detik untuk `/batch`. |
 
-## Authentication (Basic Auth)
+## Authentication (Basic Auth untuk /metrics)
 
-Secara default `AUTH_ENABLED=false` (backward compatible). Jika diaktifkan, semua endpoint **kecuali `/health`** akan membutuhkan Basic Auth.
+Hanya endpoint **`/metrics`** yang diproteksi Basic Auth (privat). Endpoint lain (`/login`, `/otp/verify`, `/batch`, `/health`, `/livez`, `/readyz`) bersifat **publik**.
 
 Variabel env:
 | Var | Default | Deskripsi |
 |---|---|---|
-| `AUTH_ENABLED` | `false` | Aktifkan Basic Auth (`true`/`false`). |
-| `AUTH_USER` | - | Username (wajib jika enabled). |
-| `AUTH_PASS` | - | Password (wajib jika enabled). |
+| `METRICS_AUTH_ENABLED` | `true` | Proteksi Basic Auth untuk `/metrics` (`true`/`false`). |
+| `AUTH_USER` | - | Username (wajib jika `METRICS_AUTH_ENABLED=true`). |
+| `AUTH_PASS` | - | Password (wajib jika `METRICS_AUTH_ENABLED=true`). |
 | `AUTH_REALM` | `loginiam` | Realm untuk WWW-Authenticate. |
 
 Catatan keamanan:
-- `/health` **dibebaskan untuk localhost** (127.0.0.1/::1) agar Docker HEALTHCHECK tetap bisa berjalan tanpa kredensial.
-- Jika `AUTH_ENABLED=true` tapi `AUTH_USER`/`AUTH_PASS` kosong, server akan merespons `500 AUTH_NOT_CONFIGURED` saat ada request.
-- Endpoint sensitif (`/login`, `/otp/verify`, `/batch`, `/metrics`, `/livez`, `/readyz`) akan mendapat `401 UNAUTHORIZED` tanpa kredensial yang valid.
+- Jika `METRICS_AUTH_ENABLED=true` tapi `AUTH_USER`/`AUTH_PASS` kosong, `/metrics` merespons `500 AUTH_NOT_CONFIGURED` (fail-closed) sehingga tidak terbuka.
+- Set `METRICS_AUTH_ENABLED=false` hanya jika `/metrics` memang boleh diakses publik (mis. di balik jaringan internal).
 
 Contoh penggunaan:
 ```bash
-# Request dengan Basic Auth
+# /metrics butuh Basic Auth
 curl -u admin:password http://127.0.0.1:8080/metrics
 
-# Health tetap bisa diakses dari localhost (tanpa auth)
+# Endpoint lain publik
 curl http://127.0.0.1:8080/health
 ```
 
