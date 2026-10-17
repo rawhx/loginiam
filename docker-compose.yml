@@ -11,11 +11,11 @@ services:
     environment:
       ADDR: ":8080"
       VERBOSE: "false"
-      # Proteksi Basic Auth khusus /metrics (set METRICS_AUTH_ENABLED=false untuk publik; ubah password di produksi)
-      METRICS_AUTH_ENABLED: "true"
-      AUTH_USER: "admin"
-      AUTH_PASS: "change-this-strong-password"
-      AUTH_REALM: "loginiam"
+      # Proteksi Basic Auth khusus /metrics (ubah kredensial lewat file .env; ubah password di produksi)
+      METRICS_AUTH_ENABLED: "${METRICS_AUTH_ENABLED:-true}"
+      AUTH_USER: "${AUTH_USER:-admin}"
+      AUTH_PASS: "${AUTH_PASS:-change-this-strong-password}"
+      AUTH_REALM: "${AUTH_REALM:-loginiam}"
     # Batas resource agar container tetap ringan & tidak membebani host.
     healthcheck:
       test: ["CMD", "/api", "healthcheck"]

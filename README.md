@@ -36,9 +36,28 @@ Variabel env:
 | Var | Default | Deskripsi |
 |---|---|---|
 | `METRICS_AUTH_ENABLED` | `true` | Proteksi Basic Auth untuk `/metrics` (`true`/`false`). |
-| `AUTH_USER` | - | Username (wajib jika `METRICS_AUTH_ENABLED=true`). |
-| `AUTH_PASS` | - | Password (wajib jika `METRICS_AUTH_ENABLED=true`). |
+| `AUTH_USER` | `admin` (compose) | Username (wajib jika `METRICS_AUTH_ENABLED=true`). |
+| `AUTH_PASS` | `change-this-strong-password` (compose) | Password (wajib jika `METRICS_AUTH_ENABLED=true`). |
 | `AUTH_REALM` | `loginiam` | Realm untuk WWW-Authenticate. |
+
+### Konfigurasi lewat `.env` (Docker Compose)
+
+`docker-compose.yml` membaca nilai ini dari file `.env` di root project (dengan fallback default di atas). Buat `.env`:
+
+```bash
+# .env (jangan di-commit; sudah masuk .gitignore)
+AUTH_USER=admin
+AUTH_PASS=ganti-dengan-password-kuat
+# METRICS_AUTH_ENABLED=false   # opsional: matikan proteksi /metrics (khusus dev)
+# AUTH_REALM=loginiam
+```
+
+Lalu:
+```bash
+docker compose up -d --build
+```
+
+Catatan penting: kredensial yang dipakai adalah nilai di `.env` (atau default compose), **bukan** akun SIAM/UB-mu. Jika browser menyimpan/mengisi otomatis password lama, hapus dulu kredensial tersimpan untuk origin tersebut (atau buka jendela private) supaya dialog Basic Auth memakai kredensial yang benar.
 
 Catatan keamanan:
 - Jika `METRICS_AUTH_ENABLED=true` tapi `AUTH_USER`/`AUTH_PASS` kosong, `/metrics` merespons `500 AUTH_NOT_CONFIGURED` (fail-closed) sehingga tidak terbuka.
@@ -166,7 +185,8 @@ docker run -d -p 8080:8080 -e VERBOSE=false loginiam-api
 
 Docker Compose:
 ```bash
-docker compose up -d
+# kredensial /metrics diambil dari .env (lihat bagian Authentication)
+docker compose up -d --build
 ```
 
 Healthcheck terintegrasi (`/api healthcheck`) dengan interval 30s/timeout 3s/retries 3.
