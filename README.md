@@ -71,7 +71,9 @@ Response (sukses langsung):
   "student": {
     "nim": "...",
     "nama": "...",
-    "email": "..."
+    "email": "...",
+    "fakultas": "...",
+    "prodi": "..."
   }
 }
 ```
@@ -104,7 +106,7 @@ Response (gagal):
 Response (sukses):
 ```json
 {
-  "student": { "nim": "...", "nama": "...", "email": "..." }
+  "student": { "nim": "...", "nama": "...", "email": "...", "fakultas": "...", "prodi": "..." }
 }
 ```
 

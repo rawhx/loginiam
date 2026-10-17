@@ -147,9 +147,11 @@ func findIn(s *goquery.Selection, sel goquery.Matcher) *goquery.Selection {
 // ---------------------------------------------------------------------------
 
 type StudentDetails struct {
-	NIM   string `json:"nim"`
-	Nama  string `json:"nama"`
-	Email string `json:"email"`
+	NIM      string `json:"nim"`
+	Nama     string `json:"nama"`
+	Email    string `json:"email"`
+	Fakultas string `json:"fakultas,omitempty"`
+	Prodi    string `json:"prodi,omitempty"`
 }
 
 // OTPDevice merepresentasikan satu "tile" kredensial OTP/2FA yang ditawarkan
@@ -599,6 +601,14 @@ func parseSAMLToStudent(username, samlResp string) (*StudentDetails, *AuthError)
 			if value != "" {
 				student.Email = value
 			}
+		case "faculty", "fakultas", "fakultasName", "facultyName", "organisationUnit", "ou", "department":
+			if value != "" && student.Fakultas == "" {
+				student.Fakultas = value
+			}
+		case "prodi", "programStudi", "program_studi", "studyProgram", "major", "jurusan", "programOfStudy":
+			if value != "" && student.Prodi == "" {
+				student.Prodi = value
+			}
 		}
 	}
 
@@ -608,11 +618,17 @@ func parseSAMLToStudent(username, samlResp string) (*StudentDetails, *AuthError)
 	if student.Email == "" {
 		logf(username, "SAML_MAP", "PERINGATAN: Email tetap kosong setelah mapping")
 	}
+	if student.Fakultas == "" {
+		logf(username, "SAML_MAP", "PERINGATAN: Fakultas tetap kosong setelah mapping -- lihat SAML_ATTR di atas (kalau Verbose aktif)")
+	}
+	if student.Prodi == "" {
+		logf(username, "SAML_MAP", "PERINGATAN: Prodi tetap kosong setelah mapping -- lihat SAML_ATTR di atas (kalau Verbose aktif)")
+	}
 	if student.NIM == "" {
 		logf(username, "SAML_MAP", "PERINGATAN: NIM (NameID) kosong")
 	}
 
-	logf(username, "DONE", "hasil akhir: NIM=%s Nama=%q Email=%q", student.NIM, student.Nama, student.Email)
+	logf(username, "DONE", "hasil akhir: NIM=%s Nama=%q Email=%q Fakultas=%q Prodi=%q", student.NIM, student.Nama, student.Email, student.Fakultas, student.Prodi)
 
 	return student, nil
 }
